@@ -34,7 +34,15 @@ FreeMarker branches for FA Model, JS/HML, Atomic Service, and Super Visual were
 not carried into the standalone generator because they were not advertised by
 either template and several produced incomplete or non-hybrid output.
 
-## Installation
+## Installation - End User
+
+To install the CLI in an isolated environment with pipx (FUTURE add URL here instead when repo public):
+
+```console
+pipx install .
+```
+
+## Installation - Dev
 
 Create the development environment and lock dependencies:
 
