@@ -36,10 +36,10 @@ either template and several produced incomplete or non-hybrid output.
 
 ## Installation - End User
 
-To install the CLI in an isolated environment with pipx (FUTURE add URL here instead when repo public):
+To install the CLI in an isolated environment with pipx:
 
 ```console
-pipx install .
+pipx install git+https://github.com/cjpluk/hmos-project-scaffolder
 ```
 
 ## Installation - Dev
