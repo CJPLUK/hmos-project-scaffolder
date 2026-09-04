@@ -1,20 +1,11 @@
 # HarmonyOS Project Scaffolder
 
-`harmonyos-project-scaffolder` is a pip-installable Python library and CLI for
-creating standalone HarmonyOS projects from the Cangjie templates in this
-repository.
+`harmonyos-project-scaffolder` is an npm library for creating standalone
+HarmonyOS projects from the two bundled Cangjie templates. It has no CLI.
 
-The original FreeMarker recipes depended on DevEco Studio merge commands and
-files outside this repository. They have been converted to complete Jinja
-project trees. A template therefore looks nearly identical to its generated
-project: dynamic text files only add a `.j2` suffix, dynamic directory and file
-names use Jinja expressions, and binary assets are copied unchanged.
-
-Jinja is used instead of a standard-library substitute because these templates
-need strict missing-variable errors, conditionals, and templated path names.
-Implementing those features locally would create a small, less-tested template
-engine. Jinja also does not conflict with the `${...}` interpolation used by
-Cangjie and `cjpm.toml`, so those expressions remain readable and unchanged.
+The templates are rendered with strict missing-variable checks. Dynamic path
+names are rendered, `.j2` is removed from rendered text files, binary assets
+are copied unchanged, and intentional empty directories are retained.
 
 ## Templates
 
@@ -23,237 +14,109 @@ Cangjie and `cjpm.toml`, so those expressions remain readable and unchanged.
 | `cangjie-empty-ability` | Stage-model application with a Cangjie `UIAbility`, ability stage, ArkUI view, local tests, and device tests. |
 | `hybrid-cangjie-ability` | Stage-model ArkTS application whose page calls a Cangjie shared library, including type declarations and a backup extension. |
 
-Both templates produce a complete application root, not a module overlay. The
-generated shell is based on `example/MyApplication`; generated caches, lock
-files, IDE metadata, local SDK paths, and compiler-generated Cangjie bridge
-files are deliberately excluded.
+Both templates produce a complete application root rather than a module
+overlay.
 
-The supported scope follows the templates' catalog metadata: Application,
-Stage Model, and traditional Cangjie or ArkTS development. Dormant inherited
-FreeMarker branches for FA Model, JS/HML, Atomic Service, and Super Visual were
-not carried into the standalone generator because they were not advertised by
-either template and several produced incomplete or non-hybrid output.
-
-## Installation - End User
-
-To install the CLI in an isolated environment with pipx:
+## Installation
 
 ```console
-pipx install git+https://github.com/cjpluk/hmos-project-scaffolder
+npm install harmonyos-project-scaffolder
 ```
 
-## Installation - Dev
+Node.js 18 or newer is required.
 
-Create the development environment and lock dependencies:
+## Usage
 
-```console
-uv sync
+`scaffold` takes a template name, the exact destination directory, and project
+options. It returns a promise.
+
+```js
+import {
+  HostPlatform,
+  scaffold,
+} from "harmonyos-project-scaffolder";
+
+await scaffold("cangjie-empty-ability", "./MyApplication", {
+  projectName: "MyApplication",
+  bundleName: "com.example.myapplication",
+  permissions: [
+    "ohos.permission.INTERNET",
+    "ohos.permission.PRIVACY_WINDOW",
+  ],
+  hostPlatform: HostPlatform.MACOS_ARM64,
+});
 ```
 
-Run the CLI from the checkout:
+The destination is the generated project root; the project name is not
+appended. A missing or empty destination is accepted. A non-empty destination
+is rejected unless `overwrite: true` is supplied. Overwrite mode replaces
+generated paths but does not delete unrelated files.
 
-```console
-uv run harmonyos-scaffold list
+`listTemplates()` provides programmatic template discovery:
+
+```js
+import { listTemplates } from "harmonyos-project-scaffolder";
+
+for (const template of listTemplates()) {
+  console.log(template.name, template.description);
+}
 ```
 
-Install the command as a tool:
+## Options
 
-```console
-uv tool install .
-```
-
-The project is also installable with pip:
-
-```console
-python -m pip install .
-```
-
-## CLI
-
-List the bundled templates:
-
-```console
-harmonyos-scaffold list
-```
-
-Create the same project shape and default values as the reference Cangjie Empty
-Ability project:
-
-```console
-harmonyos-scaffold create cangjie-empty-ability ./MyApplication \
-  --project-name MyApplication \
-  --bundle-name com.example.myapplication
-```
-
-Create a hybrid project with explicit identifiers:
-
-```console
-harmonyos-scaffold create hybrid-cangjie-ability ./HybridApplication \
-  --project-name HybridApplication \
-  --bundle-name com.example.hybrid \
-  --module-name entry \
-  --ability-name EntryAbility \
-  --cangjie-package ohos_app_cangjie_entry \
-  --backup-ability-name EntryBackupAbility
-```
-
-`destination` is the exact project root. The CLI does not append the project
-name. A missing or empty destination is accepted. A non-empty destination is
-rejected unless `--overwrite` is supplied; overwrite mode replaces generated
-paths but never deletes unrelated files.
-
-### Create parameters
-
-| Argument | Required | Default | Meaning |
+| Option | Required | Default | Meaning |
 | --- | --- | --- | --- |
-| `template` | Yes | - | `cangjie-empty-ability` or `hybrid-cangjie-ability`. |
-| `destination` | Yes | - | Exact directory that becomes the HarmonyOS project root. |
-| `--project-name` | Yes | - | Application display name written to `$string:app_name`. |
-| `--bundle-name` | Yes | - | Dot-separated HarmonyOS bundle identifier, such as `com.example.app`. |
-| `--module-name` | No | `entry` | Module identifier and output directory. |
-| `--ability-name` | No | `EntryAbility` | Main ability class and descriptor name. |
-| `--cangjie-package` | No | `ohos_app_cangjie_<module>` | Cangjie package and shared-library base name. |
-| `--view-name` | No | `EntryView` | Root view class used by the Cangjie Empty template. |
-| `--backup-ability-name` | No | `EntryBackupAbility` | Backup extension class used by the Hybrid template. |
-| `--vendor` | No | `example` | Value written to `AppScope/app.json5`. |
-| `--target-sdk-version` | No | `6.1.1(24)` | Target SDK in `major.minor.patch(api)` format. |
-| `--compatible-sdk-version` | No | `6.1.1(24)` | Minimum compatible SDK in `major.minor.patch(api)` format. |
-| `--model-version` | No | `6.1.1` | Hvigor and root OHPM model version. |
-| `--cjc-version` | No | `1.1.3` | Cangjie compiler version in each `cjpm.toml`. |
-| `--app-version-code` | No | `1000000` | Positive numeric application version code. |
-| `--app-version-name` | No | `1.0.0` | Human-readable application version. |
-| `--app-build-version` | No | `1` | Application build version string. |
-| `--device-type` | No | `phone` | `phone` or `tablet`; repeat the option to emit both. |
-| `--permission` | No | - | HarmonyOS permission declared in the module manifest; repeat the option for multiple permissions. |
-| `--host-platform` | No | `auto` | `auto`, `macos-arm64`, or `windows-x64`; controls the host section in CJPM manifests. |
-| `--installation-free` | No | Off | Set the module's `installationFree` field. |
-| `--not-exported` | No | Off | Omit `exported: true`; use with `--no-home-screen`. |
-| `--no-home-screen` | No | Off | Omit the launcher home-screen skill. |
-| `--overwrite` | No | Off | Replace generated files in an existing non-empty directory. |
+| `projectName` | Yes | - | Application display name written to `$string:app_name`. |
+| `bundleName` | Yes | - | Dot-separated HarmonyOS bundle identifier. |
+| `moduleName` | No | `entry` | Module identifier and output directory. |
+| `abilityName` | No | `EntryAbility` | Main ability class and descriptor name. |
+| `cangjiePackage` | No | `ohos_app_cangjie_<module>` | Cangjie package and shared-library base name. |
+| `viewName` | No | `EntryView` | Root view class used by the Cangjie Empty template. |
+| `backupAbilityName` | No | `EntryBackupAbility` | Backup extension class used by the Hybrid template. |
+| `vendor` | No | `example` | Value written to `AppScope/app.json5`. |
+| `targetSdkVersion` | No | `6.1.1(24)` | Target SDK in `major.minor.patch(api)` format. |
+| `compatibleSdkVersion` | No | `6.1.1(24)` | Minimum compatible SDK in the same format. |
+| `modelVersion` | No | `6.1.1` | Hvigor and root OHPM model version. |
+| `cjcVersion` | No | `1.1.3` | Cangjie compiler version in each `cjpm.toml`. |
+| `appVersionCode` | No | `1000000` | Positive numeric application version code. |
+| `appVersionName` | No | `1.0.0` | Human-readable application version. |
+| `appBuildVersion` | No | `1` | Application build version string. |
+| `deviceTypes` | No | `["phone"]` | Array containing `phone`, `tablet`, or both. |
+| `permissions` | No | `[]` | HarmonyOS permission names emitted into `requestPermissions`. |
+| `hostPlatform` | No | `auto` | `auto`, `macos-arm64`, or `windows-x64`; controls CJPM host sections. |
+| `installationFree` | No | `false` | Sets the module's `installationFree` field. |
+| `exported` | No | `true` | Controls whether the main ability is exported. |
+| `homeScreen` | No | `true` | Controls whether the launcher home-screen skill is emitted. |
+| `overwrite` | No | `false` | Allows generated files to be merged into a non-empty directory. |
 
+The compatible SDK must use API 22 or newer and cannot exceed the target SDK.
 The source templates only define build-host dependencies for Windows x64 and
-Apple Silicon macOS. `auto` detects those hosts. On another system, pass the
-platform of the machine that will build the generated project explicitly.
+Apple Silicon macOS. On other systems, set `hostPlatform` explicitly to the
+platform that will build the generated project.
 
-The compatible SDK must be API 22 or newer, matching the modern source used by
-the reference project, and cannot exceed the target SDK. API 20-21 generation
-is intentionally rejected because the legacy source and hybrid interop APIs in
-the original recipes do not form a buildable standalone project.
+Permissions must have the form `ohos.permission.PERMISSION_NAME`. This option
+only emits name-based declarations. User-authorized permissions can also need
+localized reason, use-scene metadata, and runtime authorization, which remain
+the consuming application's responsibility.
 
-`--permission` declares name-only `system_grant` permissions in
-`<module>/src/main/module.json5`. User-authorized permissions also require a
-localized reason, use-scene metadata, and contextual runtime authorization;
-those feature-specific values are not generated by this option.
+The package includes TypeScript declarations for all exports and options.
+Expected errors derive from `ScaffoldError`; more specific exported classes are
+`ConfigurationError`, `TemplateNotFoundError`, and `DestinationError`.
 
-Use `harmonyos-scaffold list-permissions` to list the permissions available to
-normal applications in the installed DevEco SDK. The command labels
-`system_basic` permissions that require ACL approval and includes grant mode
-and minimum API level.
+## Removed Python Features
 
-The same CLI is available through the module entry point:
-
-```console
-python -m harmonyos_scaffolder create --help
-```
-
-## Python API
-
-`ProjectConfig` validates identifiers and derives the Cangjie package when it
-is omitted. Pass the template name, exact destination, and configuration to
-`scaffold`:
-
-```python
-from pathlib import Path
-
-from harmonyos_scaffolder import HostPlatform, ProjectConfig, scaffold
-
-config = ProjectConfig(
-    project_name="MyApplication",
-    bundle_name="com.example.myapplication",
-    module_name="entry",
-    ability_name="EntryAbility",
-    view_name="EntryView",
-    target_sdk_version="6.1.1(24)",
-    compatible_sdk_version="6.1.1(24)",
-    cjc_version="1.1.3",
-    permissions=("ohos.permission.INTERNET",),
-    host_platform=HostPlatform.MACOS_ARM64,
-)
-
-scaffold(
-    "cangjie-empty-ability",
-    Path("MyApplication"),
-    config,
-)
-
-print("Created", Path("MyApplication"))
-```
-
-Use `list_templates()` for programmatic discovery:
-
-```python
-from harmonyos_scaffolder import list_templates
-
-for template in list_templates():
-    print(template.name, template.description)
-```
-
-The API raises subclasses of `ScaffoldError` for expected failures:
-
-| Exception | Cause |
-| --- | --- |
-| `ConfigurationError` | Invalid identifier, API combination, version, device type, or host platform. |
-| `TemplateNotFoundError` | Unknown template name. |
-| `DestinationError` | Unsafe or non-empty destination without overwrite permission. |
-
-`scaffold(..., overwrite=True)` has the same non-destructive merge behavior as
-the CLI flag.
-
-## Template layout
-
-The source trees are under the repository's top-level `templates/` directory:
-
-```text
-templates/
-├── cangjie-empty-ability/project/
-└── hybrid-cangjie-ability/project/
-```
-
-The build embeds this directory as package data, so the same templates are
-available to pip-installed wheels. Editable/source checkouts load the top-level
-directory directly.
-
-Everything below `project/` maps directly to the generated root. For example:
-
-```text
-project/
-├── AppScope/
-├── build-profile.json5.j2
-├── code-linter.json5
-├── hvigor/
-├── oh-package.json5.j2
-└── {{ module_name }}/
-    ├── cjpm.toml.j2
-    └── src/main/
-```
-
-The renderer applies these rules:
-
-1. Jinja renders every path segment, allowing `{{ module_name }}` and ability-specific paths.
-2. UTF-8 files ending in `.j2` are rendered with `StrictUndefined`, then the suffix is removed.
-3. Other files, including PNG assets, are copied byte-for-byte.
-4. `.scaffold-keep` records an intentional empty directory and is not emitted.
-5. Rendered path segments are checked for traversal and separators before writing.
-
-`${...}` expressions in Cangjie and CJPM files are runtime/build placeholders,
-not Jinja expressions, and remain intact in generated projects.
+The Python command-line interface was intentionally not ported. Installed
+DevEco SDK permission-catalog discovery (`list-permissions` / `list_permissions`)
+was also removed because it only supported that interactive CLI workflow.
+Callers provide the permission list directly through `permissions`.
 
 ## Development
 
 ```console
-uv run ruff check .
-uv run pytest
-uv build
+npm install
+npm test
+npm run check
+npm pack --dry-run
 ```
 
 ## License And Template Attribution
@@ -261,5 +124,4 @@ uv build
 This project is licensed under the Apache License 2.0. The bundled project
 templates are modified derivatives of the Cangjie DevEco Studio plugin 6.1.1.280
 templates, including Cangjie Empty Ability and Hybrid Cangjie Ability. See
-[`NOTICE`](NOTICE) for the required attribution and scope of the upstream
-Runtime Library Exception.
+[`NOTICE`](NOTICE) for attribution and the upstream Runtime Library Exception.

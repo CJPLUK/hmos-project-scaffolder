@@ -1,0 +1,43 @@
+{
+  "name": "harmonyos-project-scaffolder",
+  "version": "0.1.0",
+  "description": "Scaffold standalone HarmonyOS Cangjie projects from bundled templates.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    }
+  },
+  "files": [
+    "src/index.js",
+    "src/index.d.ts",
+    "src/harmonyos_scaffolder/templates",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check src/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CJPLUK/hmos-project-scaffolder.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Cangjie Programming Language UK Team",
+  "keywords": [
+    "harmonyos",
+    "cangjie",
+    "scaffolding",
+    "deveco"
+  ],
+  "dependencies": {
+    "nunjucks": "^3.2.4"
+  }
+}

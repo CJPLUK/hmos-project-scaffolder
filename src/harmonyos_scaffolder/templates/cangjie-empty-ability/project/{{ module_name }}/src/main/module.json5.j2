@@ -5,10 +5,12 @@
     "description": "$string:module_desc",
     "mainElement": {{ ability_name | json }},
     "deviceTypes": [
-      {{ device_types | map("json") | join(",\n      ") }}
+{% for device_type in device_types %}
+      {{ device_type | json }}{{ "," if not loop.last }}
+{% endfor %}
     ],
     "deliveryWithInstall": true,
-    "installationFree": {{ installation_free | json }}{% if permissions %},
+    "installationFree": {{ installation_free | json }}{% if permissions | length %},
     "requestPermissions": [
 {% for permission in permissions %}
       {
