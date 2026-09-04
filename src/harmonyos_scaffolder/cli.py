@@ -9,6 +9,7 @@ from pathlib import Path
 
 from .config import HostPlatform, ProjectConfig
 from .errors import ScaffoldError
+from .permissions import list_permissions
 from .scaffolder import list_templates, scaffold
 
 
@@ -20,6 +21,10 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("list", help="list bundled templates")
+    subparsers.add_parser(
+        "list-permissions",
+        help="list normal-app HarmonyOS permissions from the installed DevEco SDK",
+    )
 
     create = subparsers.add_parser("create", help="create a project from a template")
     create.add_argument("template", choices=[item.name for item in list_templates()])
@@ -61,6 +66,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="target device type; repeat for multiple values (default: phone)",
     )
     create.add_argument(
+        "--permission",
+        action="append",
+        dest="permissions",
+        default=argparse.SUPPRESS,
+        help="HarmonyOS permission to declare; use list-permissions to discover available values",
+    )
+    create.add_argument(
         "--host-platform",
         choices=[item.value for item in HostPlatform],
         default=argparse.SUPPRESS,
@@ -100,6 +112,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         for template in list_templates():
             print(f"{template.name}\t{template.description}")
         return 0
+    if arguments.command == "list-permissions":
+        try:
+            for permission in list_permissions():
+                details = [
+                    permission.grant_mode,
+                    permission.available_level,
+                    f"API {permission.since}",
+                ]
+                if permission.requires_acl:
+                    details.append("ACL required")
+                if permission.deprecated:
+                    details.append(f"deprecated {permission.deprecated}")
+                print(f"{permission.name}\t{', '.join(details)}")
+        except ScaffoldError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
+        return 0
 
     try:
         config_values = {
@@ -107,8 +136,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             for name, value in vars(arguments).items()
             if name not in {"command", "template", "destination", "overwrite"}
         }
-        if "device_types" in config_values:
-            config_values["device_types"] = tuple(config_values["device_types"])
         config = ProjectConfig(**config_values)
         scaffold(arguments.template, arguments.destination, config, overwrite=arguments.overwrite)
     except ScaffoldError as error:

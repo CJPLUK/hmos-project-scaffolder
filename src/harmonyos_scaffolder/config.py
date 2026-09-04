@@ -17,6 +17,7 @@ _BUNDLE_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+$"
 _CANGJIE_PACKAGE = re.compile(r"^[a-z][a-z0-9_]*$")
 _CJC_VERSION = re.compile(r"^[0-9A-Za-z][0-9A-Za-z._+-]*$")
 _SDK_VERSION = re.compile(r"^\d+\.\d+\.\d+\((\d+)\)$")
+_PERMISSION = re.compile(r"^ohos\.permission\.[A-Za-z][A-Za-z0-9_.]*$")
 _SUPPORTED_DEVICE_TYPES = frozenset({"phone", "tablet"})
 _WINDOWS_RESERVED_NAMES = frozenset(
     {"CON", "PRN", "AUX", "NUL"}
@@ -75,6 +76,7 @@ class ProjectConfig:
     app_version_name: str = "1.0.0"
     app_build_version: str = "1"
     device_types: tuple[str, ...] = ("phone",)
+    permissions: tuple[str, ...] = ()
     installation_free: bool = False
     exported: bool = True
     home_screen: bool = True
@@ -100,6 +102,13 @@ class ProjectConfig:
                 object.__setattr__(self, "device_types", tuple(self.device_types))
             except TypeError as error:
                 raise ConfigurationError("device_types must be an iterable of strings") from error
+        if isinstance(self.permissions, str):
+            raise ConfigurationError("permissions must be a sequence, not a string")
+        if not isinstance(self.permissions, tuple):
+            try:
+                object.__setattr__(self, "permissions", tuple(self.permissions))
+            except TypeError as error:
+                raise ConfigurationError("permissions must be an iterable of strings") from error
         self._validate()
 
     def _validate(self) -> None:
@@ -178,6 +187,13 @@ class ProjectConfig:
             )
         if len(set(self.device_types)) != len(self.device_types):
             raise ConfigurationError("device_types must not contain duplicates")
+        for permission in self.permissions:
+            if not isinstance(permission, str) or not _PERMISSION.fullmatch(permission):
+                raise ConfigurationError(
+                    "permissions must use the form ohos.permission.PERMISSION_NAME"
+                )
+        if len(set(self.permissions)) != len(self.permissions):
+            raise ConfigurationError("permissions must not contain duplicates")
 
     @staticmethod
     def _parse_sdk_api(value: str, *, field_name: str) -> int:

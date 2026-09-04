@@ -106,6 +106,7 @@ def test_scaffolds_hybrid_project_with_dynamic_paths(tmp_path: Path) -> None:
         cangjie_package="sample_cangjie",
         backup_ability_name="SampleBackup",
         device_types=("phone", "tablet"),
+        permissions=("ohos.permission.INTERNET",),
         host_platform=HostPlatform.WINDOWS_X64,
     )
 
@@ -117,6 +118,7 @@ def test_scaffolds_hybrid_project_with_dynamic_paths(tmp_path: Path) -> None:
 
     module = json.loads((destination / "sample/src/main/module.json5").read_text())
     assert module["module"]["deviceTypes"] == ["phone", "tablet"]
+    assert module["module"]["requestPermissions"] == [{"name": "ohos.permission.INTERNET"}]
     assert module["module"]["abilities"][0]["srcEntry"] == ("./ets/sampleability/SampleAbility.ets")
     assert module["module"]["extensionAbilities"][0]["name"] == "SampleBackup"
 
