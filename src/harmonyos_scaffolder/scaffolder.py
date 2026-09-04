@@ -59,9 +59,7 @@ def scaffold(
 
     if template not in _TEMPLATES:
         choices = ", ".join(_TEMPLATES)
-        raise TemplateNotFoundError(
-            f"unknown template {template!r}; available templates: {choices}"
-        )
+        raise TemplateNotFoundError(f"unknown template {template!r}; available choices: {choices}")
 
     destination_path = Path(destination).expanduser()
     # Validate the destination path

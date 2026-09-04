@@ -110,12 +110,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if "device_types" in config_values:
             config_values["device_types"] = tuple(config_values["device_types"])
         config = ProjectConfig(**config_values)
-        scaffold(
-            arguments.template,
-            arguments.destination,
-            config,
-            overwrite=arguments.overwrite,
-        )
+        scaffold(arguments.template, arguments.destination, config, overwrite=arguments.overwrite)
     except ScaffoldError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
