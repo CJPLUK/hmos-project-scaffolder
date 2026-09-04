@@ -1,0 +1,14 @@
+HarmonyOS Project Scaffolder
+Copyright 2026 Cangjie Programming Language UK Team
+
+This product includes modified project templates derived from the Cangjie
+DevEco Studio plugin, version 6.1.1.280, including the Cangjie Empty Ability
+and Hybrid Cangjie Ability templates.
+
+The source plugin identifies the Cangjie Project as licensed under the Apache
+License, Version 2.0, with a Runtime Library Exception. This product does not
+include or distribute the Cangjie runtime library; the Runtime Library Exception
+does not alter the Apache License terms for this product.
+
+DevEco Studio and Cangjie are trademarks of their respective owners. This
+project is not officially endorsed by Huawei.

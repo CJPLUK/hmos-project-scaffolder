@@ -255,3 +255,11 @@ uv run ruff check .
 uv run pytest
 uv build
 ```
+
+## License And Template Attribution
+
+This project is licensed under the Apache License 2.0. The bundled project
+templates are modified derivatives of the Cangjie DevEco Studio plugin 6.1.1.280
+templates, including Cangjie Empty Ability and Hybrid Cangjie Ability. See
+[`NOTICE`](NOTICE) for the required attribution and scope of the upstream
+Runtime Library Exception.
