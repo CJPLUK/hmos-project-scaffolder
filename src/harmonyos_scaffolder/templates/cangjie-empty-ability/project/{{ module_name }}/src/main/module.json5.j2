@@ -1,0 +1,40 @@
+{
+  "module": {
+    "name": {{ module_name | json }},
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": {{ ability_name | json }},
+    "deviceTypes": [
+      {{ device_types | map("json") | join(",\n      ") }}
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": {{ installation_free | json }},
+    "srcEntry": {{ (cangjie_package ~ ".MyAbilityStage") | json }},
+    "abilities": [
+      {
+        "name": {{ ability_name | json }},
+        "srcEntry": {{ (cangjie_package ~ ".MainAbility") | json }},
+        "description": {{ ("$string:" ~ ability_name ~ "_desc") | json }},
+        "icon": "$media:layered_image",
+        "label": {{ ("$string:" ~ ability_name ~ "_label") | json }},
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background"{{ "," if exported or home_screen else "" }}
+{% if exported %}
+        "exported": true{{ "," if home_screen else "" }}
+{% endif %}
+{% if home_screen %}
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home"
+            ],
+            "actions": [
+              "action.system.home"
+            ]
+          }
+        ]
+{% endif %}
+      }
+    ]
+  }
+}

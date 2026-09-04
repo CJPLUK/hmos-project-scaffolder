@@ -1,0 +1,14 @@
+/**
+ * Created on 2025/2/26
+ */
+package {{ cangjie_package }}_local_test
+
+import std.unittest.expectEqual
+import std.unittest.testmacro.Expect
+
+func unittest() {
+    let a = "abc"
+    let b = "b"
+    @Expect(a.contains(b))
+    @Expect(a, a)
+}

@@ -1,0 +1,9 @@
+package {{ cangjie_package }}_test
+
+import {{ cangjie_package }}_test.unittest_support.registerTestSuite
+
+private let register = testsuite()
+
+func testsuite() {
+    registerTestSuite {TestExample00()}
+}

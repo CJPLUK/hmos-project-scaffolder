@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "module description"
+    },
+    {
+      "name": {{ (ability_name ~ "_desc") | json }},
+      "value": "description"
+    },
+    {
+      "name": {{ (ability_name ~ "_label") | json }},
+      "value": "label"
+    }
+  ]
+}
