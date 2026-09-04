@@ -18,27 +18,13 @@ _TEMPLATE_SUFFIX = ".j2"
 _KEEP_FILE = ".scaffold-keep"
 _SOURCE_TEMPLATE_ROOT = Path(__file__).resolve().parent / "templates"
 
-def _template_root() -> Any:
-    if _SOURCE_TEMPLATE_ROOT.is_dir():
-        return _SOURCE_TEMPLATE_ROOT
-    raise ScaffoldError("bundled project templates could not be located")
-
 
 @dataclass(frozen=True, slots=True)
 class TemplateInfo:
     """Metadata describing a bundled project template."""
-
     name: str
     display_name: str
     description: str
-
-
-@dataclass(frozen=True, slots=True)
-class ScaffoldResult:
-    """The result of one scaffold operation."""
-
-    template: TemplateInfo
-    destination: Path
 
 
 _TEMPLATES = {
@@ -54,10 +40,8 @@ _TEMPLATES = {
     ),
 }
 
-
 def list_templates() -> tuple[TemplateInfo, ...]:
     """Return the bundled templates in stable CLI display order."""
-
     return tuple(_TEMPLATES.values())
 
 
@@ -67,20 +51,18 @@ def scaffold(
     config: ProjectConfig,
     *,
     overwrite: bool = False,
-) -> ScaffoldResult:
+) -> None:
     """Render ``template`` into the exact project root at ``destination``.
 
     Existing non-empty directories are rejected by default. With ``overwrite=True``,
     generated files are replaced while unrelated destination files are retained.
     """
 
-    try:
-        template_info = _TEMPLATES[template]
-    except KeyError as error:
+    if template not in _TEMPLATES:
         choices = ", ".join(_TEMPLATES)
         raise TemplateNotFoundError(
             f"unknown template {template!r}; available templates: {choices}"
-        ) from error
+        )
 
     destination_path = Path(destination).expanduser()
     # Validate the destination path
@@ -93,7 +75,7 @@ def scaffold(
         )
 
     context = config.template_context()
-    root = _template_root().joinpath(template, "project")
+    root = _SOURCE_TEMPLATE_ROOT.joinpath(template, "project")
     environment = Environment(
         autoescape=False,
         keep_trailing_newline=True,
@@ -114,8 +96,6 @@ def scaffold(
     except (TemplateError, UnicodeDecodeError) as error:
         raise ScaffoldError(f"failed to render {template!r}: {error}") from error
 
-    return ScaffoldResult(template=template_info, destination=destination_path)
-
 
 def _render_tree(
     root: Any,
@@ -132,8 +112,6 @@ def _render_tree(
         return rendered_name
 
     for current_root, dir_names, file_names in os.walk(root, topdown=True):
-        dir_names.sort()
-        file_names.sort()
         relative_root = PurePosixPath(Path(current_root).relative_to(root).as_posix())
         rendered_root = PurePosixPath(*(render_name(part) for part in relative_root.parts))
         rendered_children: set[PurePosixPath] = set()
@@ -166,11 +144,8 @@ def _render_tree(
             if template_name is None:
                 shutil.copyfile(child, output)
             else:
-                with output.open("wb") as stream:
-                    environment.get_template(template_name).stream(context).dump(
-                        stream,
-                        encoding="utf-8",
-                    )
+                with output.open("wb", encoding="utf-8") as stream:
+                    environment.get_template(template_name).stream(context).dump(stream)
 
 def _validate_path_segment(value: str, *, source_name: str) -> None:
     if not value or value in {".", ".."} or "/" in value or "\\" in value or "\0" in value:

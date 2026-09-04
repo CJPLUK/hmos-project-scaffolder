@@ -160,14 +160,13 @@ config = ProjectConfig(
     host_platform=HostPlatform.MACOS_ARM64,
 )
 
-result = scaffold(
+scaffold(
     "cangjie-empty-ability",
     Path("MyApplication"),
     config,
 )
 
-print(result.destination)
-print(len(result.files))
+print("Created", Path("MyApplication"))
 ```
 
 Use `list_templates()` for programmatic discovery:

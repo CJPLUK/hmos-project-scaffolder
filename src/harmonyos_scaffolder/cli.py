@@ -110,7 +110,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             home_screen=arguments.home_screen,
             host_platform=arguments.host_platform,
         )
-        result = scaffold(
+        scaffold(
             arguments.template,
             arguments.destination,
             config,
@@ -120,5 +120,5 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
-    print(f"Created {result.template.display_name} at {result.destination}")
+    print(f"Created {arguments.template} at {arguments.destination}")
     return 0

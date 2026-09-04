@@ -35,9 +35,8 @@ def test_lists_bundled_templates() -> None:
 def test_scaffolds_reference_empty_ability_shape(tmp_path: Path) -> None:
     destination = tmp_path / "MyApplication"
 
-    result = scaffold("cangjie-empty-ability", destination, config())
+    scaffold("cangjie-empty-ability", destination, config())
 
-    assert result.destination == destination
     assert (destination / "entry/libs").is_dir()
     assert (destination / "entry/src/main/resources/rawfile").is_dir()
     assert not list(destination.rglob("*.j2"))

@@ -7,7 +7,7 @@ from .errors import (
     ScaffoldError,
     TemplateNotFoundError,
 )
-from .scaffolder import ScaffoldResult, TemplateInfo, list_templates, scaffold
+from .scaffolder import TemplateInfo, list_templates, scaffold
 
 __all__ = [
     "ConfigurationError",
@@ -15,7 +15,6 @@ __all__ = [
     "HostPlatform",
     "ProjectConfig",
     "ScaffoldError",
-    "ScaffoldResult",
     "TemplateInfo",
     "TemplateNotFoundError",
     "list_templates",
