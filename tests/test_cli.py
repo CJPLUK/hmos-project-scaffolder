@@ -31,7 +31,7 @@ def test_cli_creates_project(tmp_path: Path, capsys) -> None:  # type: ignore[no
     )
 
     assert exit_code == 0
-    assert "Wrote 35 files" in capsys.readouterr().out
+    assert "Created Cangjie Empty Ability" in capsys.readouterr().out
     assert (destination / "entry/src/main/cangjie/index.cj").is_file()
 
 

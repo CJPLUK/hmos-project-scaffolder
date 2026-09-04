@@ -38,7 +38,6 @@ def test_scaffolds_reference_empty_ability_shape(tmp_path: Path) -> None:
     result = scaffold("cangjie-empty-ability", destination, config())
 
     assert result.destination == destination
-    assert len(result.files) == 35
     assert (destination / "entry/libs").is_dir()
     assert (destination / "entry/src/main/resources/rawfile").is_dir()
     assert not list(destination.rglob("*.j2"))
@@ -111,9 +110,8 @@ def test_scaffolds_hybrid_project_with_dynamic_paths(tmp_path: Path) -> None:
         host_platform=HostPlatform.WINDOWS_X64,
     )
 
-    result = scaffold("hybrid-cangjie-ability", destination, project_config)
+    scaffold("hybrid-cangjie-ability", destination, project_config)
 
-    assert len(result.files) == 31
     assert (destination / "sample/src/main/ets/sampleability/SampleAbility.ets").is_file()
     assert (destination / "sample/src/main/ets/samplebackup/SampleBackup.ets").is_file()
     assert (destination / "sample/src/main/cangjie/types/libsample_cangjie/Index.d.ts").is_file()

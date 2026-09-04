@@ -121,5 +121,4 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 2
 
     print(f"Created {result.template.display_name} at {result.destination}")
-    print(f"Wrote {len(result.files)} files")
     return 0
