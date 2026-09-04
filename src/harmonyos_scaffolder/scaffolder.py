@@ -152,32 +152,34 @@ def _render_tree(
     files: list[_RenderedFile] = []
     directories: set[PurePosixPath] = {PurePosixPath()}
 
-    def visit(node: Any, relative: PurePosixPath) -> None:
-        for child in sorted(node.iterdir(), key=lambda item: item.name):
-            rendered_name = environment.from_string(child.name).render(context)
-            _validate_path_segment(rendered_name, source_name=child.name)
-            rendered_relative = relative / rendered_name
-            if child.is_dir():
-                directories.add(rendered_relative)
-                visit(child, rendered_relative)
-                continue
-            if rendered_name == _KEEP_FILE:
-                directories.add(relative)
-                continue
-            if rendered_name.endswith(_TEMPLATE_SUFFIX):
-                output_path = rendered_relative.with_name(
-                    rendered_relative.name[: -len(_TEMPLATE_SUFFIX)]
-                )
-                source = child.read_text(encoding="utf-8")
-                content = environment.from_string(source).render(context).encode("utf-8")
-            else:
-                output_path = rendered_relative
-                content = child.read_bytes()
-            if any(existing.path == output_path for existing in files):
-                raise ScaffoldError(f"template renders duplicate path: {output_path}")
-            files.append(_RenderedFile(output_path, content))
+    for child in sorted(root.rglob("*"), key=lambda item: item.relative_to(root).parts):
+        source_relative = PurePosixPath(child.relative_to(root).as_posix())
+        rendered_parts = []
+        for source_name in source_relative.parts:
+            rendered_name = environment.from_string(source_name).render(context)
+            _validate_path_segment(rendered_name, source_name=source_name)
+            rendered_parts.append(rendered_name)
+        rendered_relative = PurePosixPath(*rendered_parts)
 
-    visit(root, PurePosixPath())
+        if child.is_dir():
+            directories.add(rendered_relative)
+            continue
+        if rendered_relative.name == _KEEP_FILE:
+            directories.add(rendered_relative.parent)
+            continue
+        if rendered_relative.name.endswith(_TEMPLATE_SUFFIX):
+            output_path = rendered_relative.with_name(
+                rendered_relative.name[: -len(_TEMPLATE_SUFFIX)]
+            )
+            source = child.read_text(encoding="utf-8")
+            content = environment.from_string(source).render(context).encode("utf-8")
+        else:
+            output_path = rendered_relative
+            content = child.read_bytes()
+        if any(existing.path == output_path for existing in files):
+            raise ScaffoldError(f"template renders duplicate path: {output_path}")
+        files.append(_RenderedFile(output_path, content))
+
     return files, directories
 
 
