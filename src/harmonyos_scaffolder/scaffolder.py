@@ -26,7 +26,6 @@ class TemplateInfo:
     display_name: str
     description: str
 
-
 _TEMPLATES = {
     "cangjie-empty-ability": TemplateInfo(
         name="cangjie-empty-ability",
@@ -87,28 +86,17 @@ def scaffold(
     environment.filters["json"] = lambda value: json.dumps(value, ensure_ascii=False)
 
     try:
-        _render_tree(
-            root,
-            destination=destination_path,
-            environment=environment,
-            context=context,
-        )
+        _render_tree(root, destination_path, environment, context)
     except (TemplateError, UnicodeDecodeError) as error:
         raise ScaffoldError(f"failed to render {template!r}: {error}") from error
 
 
-def _render_tree(
-    root: Any,
-    *,
-    destination: Path,
-    environment: Environment,
-    context: dict[str, Any],
-) -> None:
-    destination.mkdir(parents=True, exist_ok=True)
+def _render_tree(root: Any, dest: Path, env: Environment, context: dict[str, Any]) -> None:
+    dest.mkdir(parents=True, exist_ok=True)
 
     def render_name(source_name: str) -> str:
-        rendered_name = environment.from_string(source_name).render(context)
-        _validate_path_segment(rendered_name, source_name=source_name)
+        rendered_name = env.from_string(source_name).render(context)
+        _validate_path_segment(rendered_name, src_name=source_name)
         return rendered_name
 
     for current_root, dir_names, file_names in os.walk(root, topdown=True):
@@ -121,8 +109,10 @@ def _render_tree(
             if output_path in rendered_children:
                 raise ScaffoldError(f"template renders duplicate path: {output_path}")
             rendered_children.add(output_path)
-            destination.joinpath(*output_path.parts).mkdir(parents=True, exist_ok=True)
+            dest.joinpath(*output_path.parts).mkdir(parents=True, exist_ok=True)
 
+        # .scaffold-keep files are only present in otherwise empty directories so that
+        # they remain in the directory tree of the git repository
         for name in (name for name in file_names if name != _KEEP_FILE):
             child = Path(current_root) / name
             rendered_relative = rendered_root / render_name(name)
@@ -138,17 +128,15 @@ def _render_tree(
             if output_path in rendered_children:
                 raise ScaffoldError(f"template renders duplicate path: {output_path}")
             rendered_children.add(output_path)
-            output = destination.joinpath(*output_path.parts)
+            output = dest.joinpath(*output_path.parts)
             if output.exists() and output.is_dir():
                 raise DestinationError(f"cannot replace directory with generated file: {output}")
             if template_name is None:
                 shutil.copyfile(child, output)
             else:
                 with output.open("wb", encoding="utf-8") as stream:
-                    environment.get_template(template_name).stream(context).dump(stream)
+                    env.get_template(template_name).stream(context).dump(stream)
 
-def _validate_path_segment(value: str, *, source_name: str) -> None:
-    if not value or value in {".", ".."} or "/" in value or "\\" in value or "\0" in value:
-        raise ScaffoldError(
-            f"template path segment {source_name!r} rendered to unsafe value {value!r}"
-        )
+def _validate_path_segment(val: str, *, src_name: str) -> None:
+    if not val or val in {".", ".."} or "/" in val or "\\" in val or "\0" in val:
+        raise ScaffoldError(f"template path segment {src_name!r} rendered to unsafe value {val!r}")
