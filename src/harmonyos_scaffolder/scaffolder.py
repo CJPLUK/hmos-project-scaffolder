@@ -134,8 +134,11 @@ def _render_tree(root: Any, dest: Path, env: Environment, context: dict[str, Any
             if template_name is None:
                 shutil.copyfile(child, output)
             else:
-                with output.open("wb", encoding="utf-8") as stream:
-                    env.get_template(template_name).stream(context).dump(stream)
+                with output.open("wb") as stream:
+                    env.get_template(template_name).stream(context).dump(
+                        stream,
+                        encoding="utf-8",
+                    )
 
 def _validate_path_segment(val: str, *, src_name: str) -> None:
     if not val or val in {".", ".."} or "/" in val or "\\" in val or "\0" in val:
